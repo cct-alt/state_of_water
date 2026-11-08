@@ -15,17 +15,24 @@ function switchPage(pageId) {
 function resizeAll() {
     let left1 = document.getElementById('left-panel');
     if (left1 && left1.clientWidth > 0) {
-        simCvs.width = left1.clientWidth; simCvs.height = left1.clientHeight;
-        let chartContainer = document.querySelector('#part1-page .chart-container');
-        // 減 70px 確保圖表底部在 iPad 上不會出界
-        if(chartContainer) { chartCvs.width = chartContainer.clientWidth - 30; chartCvs.height = chartContainer.clientHeight - 70; }
+        simCvs.width = left1.clientWidth; 
+        simCvs.height = left1.clientHeight;
+        
+        let chartWrapper = document.querySelector('#part1-page .canvas-wrapper');
+        if(chartWrapper) { 
+            chartCvs.width = chartWrapper.clientWidth; 
+            chartCvs.height = chartWrapper.clientHeight; 
+        }
     }
+    
     let left2 = document.getElementById('left-panel-2');
     if (left2 && left2.clientWidth > 0) {
-        simCvs2.width = left2.clientWidth; simCvs2.height = left2.clientHeight;
+        simCvs2.width = left2.clientWidth; 
+        simCvs2.height = left2.clientHeight;
     }
 }
 window.addEventListener('resize', resizeAll);
+setTimeout(resizeAll, 100);
 
 // ======================== 第一部分邏輯 ========================
 const simCvs = document.getElementById('simCanvas');
@@ -34,10 +41,7 @@ const chartCvs = document.getElementById('chartCanvas');
 const chartCtx = chartCvs.getContext('2d');
 
 let mode = 'idle'; let isPlaying = false; let temp = -50; let time = 0; let plateauTimer = 0;
-
-// 【修改】速度加快，平臺期減半
 const plateauMax = 480; const rate = 0.15; 
-
 let historyData = []; let particles = []; let stateText = "-"; let processText = "-";
 
 function startSim(newMode) {
@@ -86,19 +90,18 @@ function updateLogic1() {
         if (temp === 100 && plateauTimer > 0 && plateauTimer < plateauMax) stateText = "液體 + 氣體";
         if (temp === 0 && plateauTimer > plateauMax && plateauTimer < plateauMax*2) stateText = "固體 + 液體";
     }
-    if (time % 2 === 0) historyData.push({t: time, T: temp});
+    if (time % 5 === 0) historyData.push({t: time, T: temp});
 }
 
 function drawSim1() {
     if (simCvs.width === 0 || simCvs.height === 0) return; 
     simCtx.clearRect(0, 0, simCvs.width, simCvs.height);
-    
-    // 【修改】完美置中，拔除導致動畫被擠上去的不良代碼
-    let cx = simCvs.width / 2; 
-    let cy = simCvs.height / 2 + 20; 
+    let cx = simCvs.width / 2; let cy = simCvs.height / 2 + 50;
+    if (cy > simCvs.height - 100) cy = simCvs.height - 100;
 
     if (temp >= 0 && temp <= 100) {
-        simCtx.fillStyle = "#333"; simCtx.font = "bold 16px sans-serif"; simCtx.fillText("蒸發速率", 20, 40);
+        simCtx.fillStyle = "#333"; simCtx.font = "bold 16px sans-serif"; simCtx.textAlign = "left";
+        simCtx.fillText("蒸發速率", 20, 40);
         simCtx.fillStyle = "#3498db"; let evpTemp = Math.min(100, Math.max(0, temp)); let barHeight = (evpTemp / 100) * 100;
         simCtx.fillRect(30, 160 - barHeight, 40, barHeight);
         simCtx.strokeStyle = "#95a5a6"; simCtx.lineWidth = 2; simCtx.strokeRect(30, 60, 40, 100);
@@ -108,7 +111,8 @@ function drawSim1() {
     if (mode !== 'idle') {
         simCtx.fillStyle = "rgba(255, 255, 255, 0.85)";
         simCtx.roundRect = function(x, y, w, h, r) { 
-            this.beginPath(); this.moveTo(x+r, y); this.arcTo(x+w, y, x+w, y+h, r); this.arcTo(x+w, y+h, x, y+h, r); this.arcTo(x, y+h, x, y, r); this.arcTo(x, y, x+w, y, r); this.closePath(); return this;
+            this.beginPath(); this.moveTo(x+r, y); this.arcTo(x+w, y, x+w, y+h, r); this.arcTo(x+w, y+h, x, y+h, r);
+            this.arcTo(x, y+h, x, y, r); this.arcTo(x, y, x+w, y, r); this.closePath(); return this;
         };
         simCtx.roundRect(cx - 150, 15, 300, 70, 10); simCtx.fill(); simCtx.strokeStyle = "#bdc3c7"; simCtx.stroke();
         simCtx.textAlign = "center"; simCtx.fillStyle = "#2c3e50"; simCtx.font = "bold 20px sans-serif";
@@ -121,8 +125,8 @@ function drawSim1() {
     let fillPct = (temp + 50) / 200; if (fillPct < 0) fillPct = 0; if (fillPct > 1) fillPct = 1; let fillHeight = fillPct * tHeight;
     simCtx.strokeStyle = "#e74c3c"; if (mode === 'cooling' && temp < 0) simCtx.strokeStyle = "#3498db"; 
     simCtx.lineWidth = 6; simCtx.beginPath(); simCtx.moveTo(tX, tY + tHeight); simCtx.lineTo(tX, tY + tHeight - fillHeight); simCtx.stroke();
-    simCtx.beginPath(); simCtx.arc(tX, tY + tHeight + 15, 12, 0, Math.PI*2);
-    simCtx.fillStyle = "#e74c3c"; if (mode === 'cooling' && temp < 0) simCtx.fillStyle = "#3498db"; simCtx.fill();
+    simCtx.beginPath(); simCtx.arc(tX, tY + tHeight + 15, 12, 0, Math.PI*2); simCtx.fillStyle = "#e74c3c";
+    if (mode === 'cooling' && temp < 0) simCtx.fillStyle = "#3498db"; simCtx.fill();
     simCtx.fillStyle = "#333"; simCtx.font = "bold 20px sans-serif";
     simCtx.fillText(`${temp.toFixed(1)} °C`, tX + 35, Math.min(tY + tHeight - fillHeight + 10, tY + tHeight + 20));
 
@@ -150,10 +154,14 @@ function drawSim1() {
 
     let pulse = (Math.sin(Date.now() / 200) + 1) / 2; let arrowOpacity = 0.4 + (pulse * 0.6); 
     if (mode === 'heating') {
-        drawArrow(simCtx, cx - 40, cy + 160, cx - 40, cy + 100, "#e74c3c", arrowOpacity); drawArrow(simCtx, cx, cy + 160, cx, cy + 100, "#e74c3c", arrowOpacity); drawArrow(simCtx, cx + 40, cy + 160, cx + 40, cy + 100, "#e74c3c", arrowOpacity);
+        drawArrow(simCtx, cx - 40, cy + 160, cx - 40, cy + 100, "#e74c3c", arrowOpacity); 
+        drawArrow(simCtx, cx, cy + 160, cx, cy + 100, "#e74c3c", arrowOpacity); 
+        drawArrow(simCtx, cx + 40, cy + 160, cx + 40, cy + 100, "#e74c3c", arrowOpacity);
         simCtx.fillStyle = `rgba(231, 76, 60, ${arrowOpacity})`; simCtx.font = "bold 22px sans-serif"; simCtx.textAlign = "center"; simCtx.fillText("吸收能量", cx, cy + 190); simCtx.textAlign = "left";
     } else if (mode === 'cooling') {
-        drawArrow(simCtx, cx - 80, cy - 60, cx - 140, cy - 110, "#3498db", arrowOpacity); drawArrow(simCtx, cx - 90, cy, cx - 160, cy, "#3498db", arrowOpacity); drawArrow(simCtx, cx - 80, cy + 60, cx - 140, cy + 110, "#3498db", arrowOpacity); 
+        drawArrow(simCtx, cx - 80, cy - 60, cx - 140, cy - 110, "#3498db", arrowOpacity); 
+        drawArrow(simCtx, cx - 90, cy, cx - 160, cy, "#3498db", arrowOpacity); 
+        drawArrow(simCtx, cx - 80, cy + 60, cx - 140, cy + 110, "#3498db", arrowOpacity); 
         simCtx.fillStyle = `rgba(52, 152, 219, ${arrowOpacity})`; simCtx.font = "bold 22px sans-serif"; simCtx.textAlign = "center"; simCtx.fillText("釋出能量", cx, cy + 130); simCtx.textAlign = "left";
     }
     
@@ -161,7 +169,6 @@ function drawSim1() {
         simCtx.fillStyle = "#8e44ad"; simCtx.font = "bold 20px sans-serif"; simCtx.textAlign = "center"; simCtx.fillText("氣體的水 (蒸汽) 是看不見的", cx, cy - 20); simCtx.textAlign = "left";
     }
 
-    // 粒子產生邏輯
     if (isPlaying && !isFullyGas) {
         if (temp >= 50 && temp < 100 && Math.random() < 0.2 && mode === 'heating') { particles.push({ x: cx + (Math.random()*100-50), y: cy - 40, vy: -1.5, life: 60, type: 'smoke' }); }
         if (temp === 100 && waterRatio > 0 && Math.random() < 0.4 && mode === 'heating') {
@@ -173,16 +180,12 @@ function drawSim1() {
             particles.push({ x: dropX, y: dropY, vy: 1.5, life: 100, type: 'drop' }); 
         }
     }
-    
-    // 【修改】加入 isPlaying 判斷，暫停時粒子會完美定格
     particles.forEach((p, index) => {
         if (isPlaying) { p.y += p.vy; p.life--; }
-        
         if (p.type === 'smoke') { simCtx.fillStyle = `rgba(200, 200, 200, ${p.life/60})`; simCtx.beginPath(); simCtx.arc(p.x, p.y, 8, 0, Math.PI*2); simCtx.fill(); } 
         else if (p.type === 'bubble') { simCtx.strokeStyle = "rgba(255, 255, 255, 0.8)"; simCtx.beginPath(); simCtx.arc(p.x, p.y, 5, 0, Math.PI*2); simCtx.stroke(); } 
         else if (p.type === 'steam') { simCtx.fillStyle = `rgba(180, 180, 180, ${(p.life/80) * 0.4})`; simCtx.beginPath(); simCtx.arc(p.x, p.y, 15, 0, Math.PI*2); simCtx.fill(); } 
         else if (p.type === 'drop') { simCtx.fillStyle = "rgba(52, 152, 219, 0.8)"; simCtx.beginPath(); simCtx.arc(p.x, p.y, 6, 0, Math.PI*2); simCtx.moveTo(p.x - 6, p.y); simCtx.lineTo(p.x, p.y - 12); simCtx.lineTo(p.x + 6, p.y); simCtx.fill(); }
-        
         if (p.life <= 0) particles.splice(index, 1);
     });
 }
@@ -191,8 +194,10 @@ function drawChart1() {
     if (chartCvs.width === 0 || chartCvs.height === 0) return;
     chartCtx.clearRect(0, 0, chartCvs.width, chartCvs.height);
     let pad = 40; let w = chartCvs.width - pad * 2; let h = chartCvs.height - pad * 2;
+    
+    // 【修改】將 X 軸文字往上移動 15px，解決被截斷問題
     chartCtx.strokeStyle = "#333"; chartCtx.lineWidth = 2; chartCtx.beginPath(); chartCtx.moveTo(pad, pad); chartCtx.lineTo(pad, h + pad); chartCtx.lineTo(w + pad, h + pad); chartCtx.stroke();
-    chartCtx.fillStyle = "#333"; chartCtx.font = "14px sans-serif"; chartCtx.fillText("溫度(°C)", 10, 25); chartCtx.fillText("時間 (分鐘)", w + pad - 60, h + pad + 20);
+    chartCtx.fillStyle = "#333"; chartCtx.font = "14px sans-serif"; chartCtx.fillText("溫度(°C)", 10, 25); chartCtx.fillText("時間 (分鐘)", w + pad - 70, h + pad + 15);
     chartCtx.fillText("150°C", 0, pad + 5); chartCtx.fillText("100°C", 0, pad + (50/200)*h + 5); chartCtx.fillText("0°C", 10, pad + (150/200)*h + 5); chartCtx.fillText("-50°C", 0, pad + h + 5);
     chartCtx.setLineDash([5, 5]); chartCtx.strokeStyle = "#ccc"; chartCtx.beginPath(); chartCtx.moveTo(pad, pad + (50/200)*h); chartCtx.lineTo(w + pad, pad + (50/200)*h); chartCtx.moveTo(pad, pad + (150/200)*h); chartCtx.lineTo(w + pad, pad + (150/200)*h); chartCtx.stroke(); chartCtx.setLineDash([]); 
 
@@ -219,7 +224,6 @@ function setScenario(num) {
     let title = document.getElementById('scen-title');
     let desc = document.getElementById('scen-desc');
     
-    // 【修改】加入「看不見的水汽」文字
     if (num === 1) {
         title.innerHTML = "🧊 情境一：凍飲罐";
         desc.innerHTML = "空氣中充滿了<span style='color:#e74c3c; font-weight:bold;'>看不見的水汽</span>。當它們接觸到從雪櫃拿出的凍飲罐表面時，會失去能量並<span style='color:#3498db; font-weight:bold;'>凝結成液態水滴</span>，沿著罐壁流下。";
@@ -239,6 +243,7 @@ function updateLogic2() {
 
     if (Math.random() < genRate) { 
         let startX, startY, targetX, targetY;
+        
         if (currentScenario === 1 || currentScenario === 2) {
             let side = Math.floor(Math.random() * 4);
             if (side === 0) { startX = -100; startY = Math.random() * simCvs2.height; } 
@@ -270,6 +275,7 @@ function updateLogic2() {
     for (let i = vapors2.length - 1; i >= 0; i--) {
         let v = vapors2[i]; v.x += v.vx; v.y += v.vy; v.life--;
         let hit = false;
+        
         if (currentScenario === 1 && v.x > cx - 50 && v.x < cx + 50 && v.y > cy - 100 && v.y < cy + 100) hit = true;
         else if (currentScenario === 2 && v.x > cx - 70 && v.x < cx + 70 && v.y > cy - 120 && v.y < cy + 120) hit = true;
         else if (currentScenario === 3 && v.y < 150) hit = true;
@@ -283,6 +289,7 @@ function updateLogic2() {
             vapors2.splice(i, 1); 
         }
     }
+
     for (let i = drops2.length - 1; i >= 0; i--) {
         let d = drops2[i]; d.y += d.vy;
         if (currentScenario === 1 && d.y > cy + 100) drops2.splice(i, 1);
@@ -296,11 +303,16 @@ function drawSim2() {
     let cx = simCvs2.width / 2; let cy = simCvs2.height / 2;
 
     if (currentScenario === 1) {
-        simCtx2.fillStyle = "#2980b9"; simCtx2.beginPath(); simCtx2.roundRect(cx - 60, cy - 110, 120, 220, 10); simCtx2.fill();
-        simCtx2.fillStyle = "#ecf0f1"; simCtx2.beginPath(); simCtx2.ellipse(cx, cy - 110, 60, 15, 0, 0, Math.PI*2); simCtx2.fill();
-        simCtx2.fillStyle = "#bdc3c7"; simCtx2.beginPath(); simCtx2.ellipse(cx, cy + 110, 60, 15, 0, 0, Math.PI*2); simCtx2.fill();
-        simCtx2.fillStyle = "white"; simCtx2.font = "bold 20px sans-serif"; simCtx2.textAlign = "center"; simCtx2.fillText("凍飲", cx, cy);
-        simCtx2.fillStyle = "#3498db"; simCtx2.font = "16px sans-serif"; simCtx2.fillText("較冷的表面", cx, cy + 140); simCtx2.textAlign = "left"; 
+        simCtx2.fillStyle = "#2980b9";
+        simCtx2.beginPath(); simCtx2.roundRect(cx - 60, cy - 110, 120, 220, 10); simCtx2.fill();
+        simCtx2.fillStyle = "#ecf0f1";
+        simCtx2.beginPath(); simCtx2.ellipse(cx, cy - 110, 60, 15, 0, 0, Math.PI*2); simCtx2.fill();
+        simCtx2.fillStyle = "#bdc3c7";
+        simCtx2.beginPath(); simCtx2.ellipse(cx, cy + 110, 60, 15, 0, 0, Math.PI*2); simCtx2.fill();
+        simCtx2.fillStyle = "white"; simCtx2.font = "bold 20px sans-serif"; simCtx2.textAlign = "center";
+        simCtx2.fillText("凍飲", cx, cy);
+        simCtx2.fillStyle = "#3498db"; simCtx2.font = "16px sans-serif"; simCtx2.fillText("較冷的表面", cx, cy + 140);
+        simCtx2.textAlign = "left"; 
     } 
     else if (currentScenario === 2) {
         simCtx2.fillStyle = "#bdc3c7"; simCtx2.fillRect(cx - 90, cy - 140, 180, 280);
@@ -308,7 +320,8 @@ function drawSim2() {
         simCtx2.strokeStyle = "rgba(255,255,255,0.6)"; simCtx2.lineWidth = 10;
         simCtx2.beginPath(); simCtx2.moveTo(cx - 60, cy + 100); simCtx2.lineTo(cx + 60, cy - 100); simCtx2.stroke();
         
-        simCtx2.save(); simCtx2.beginPath(); simCtx2.rect(cx - 80, cy - 130, 160, 260); simCtx2.clip();
+        simCtx2.save();
+        simCtx2.beginPath(); simCtx2.rect(cx - 80, cy - 130, 160, 260); simCtx2.clip();
         fogs2.forEach(f => {
             if (f.opacity < 0.6) f.opacity += 0.005; 
             simCtx2.fillStyle = `rgba(255, 255, 255, ${f.opacity})`;
@@ -328,7 +341,6 @@ function drawSim2() {
         simCtx2.fillStyle = "#2980b9"; simCtx2.font = "bold 20px sans-serif"; simCtx2.textAlign = "center";
         simCtx2.fillText("高空冷空氣層", cx, 40);
 
-        // 【修改】將海洋加厚，文字提高，確保在 iPad 底部可見
         simCtx2.fillStyle = "#3498db"; simCtx2.fillRect(0, simCvs2.height - 120, simCvs2.width, 120);
         simCtx2.fillStyle = "white"; simCtx2.fillText("海洋 (溫暖)", cx, simCvs2.height - 60);
         
@@ -351,8 +363,6 @@ function drawSim2() {
         if (c.size < c.maxSize) c.size += 0.5;
     });
 }
-
-setTimeout(resizeAll, 100);
 
 function loop() {
     if (document.getElementById('part1-page').classList.contains('active')) {
