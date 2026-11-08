@@ -18,7 +18,7 @@ function resizeAll() {
     if (left1 && left1.clientWidth > 0) {
         simCvs.width = left1.clientWidth; simCvs.height = left1.clientHeight;
         let chartContainer = document.querySelector('#part1-page .chart-container');
-        if (chartContainer) { chartCvs.width = chartContainer.clientWidth - 30; chartCvs.height = chartContainer.clientHeight - 50; }
+        if (chartContainer) { chartCvs.width = chartContainer.clientWidth - 30; chartCvs.height = chartContainer.clientHeight - 70; }
     }
     let left2 = document.getElementById('left-panel-2');
     if (left2 && left2.clientWidth > 0) {
@@ -34,7 +34,7 @@ const chartCvs = document.getElementById('chartCanvas');
 const chartCtx = chartCvs.getContext('2d');
 
 let mode = 'idle'; let isPlaying = false; let temp = -50; let time = 0; let plateauTimer = 0;
-const plateauMax = 960; const rate = 0.06;
+const plateauMax = 480; const rate = 0.15; 
 let historyData = []; let particles = []; let stateText = "-"; let processText = "-";
 
 function startSim(newMode) {
@@ -358,8 +358,9 @@ function drawSim2() {
         simCtx2.fillText("高空冷空氣層", cx, 40);
 
         // 海洋與太陽
-        simCtx2.fillStyle = "#3498db"; simCtx2.fillRect(0, simCvs2.height - 100, simCvs2.width, 100);
-        simCtx2.fillStyle = "white"; simCtx2.fillText("海洋 (溫暖)", cx, simCvs2.height - 40);
+        simCtx2.fillStyle = "#3498db"; simCtx2.fillRect(0, simCvs2.height - 120, simCvs2.width, 120);
+        simCtx2.fillStyle = "white"; simCtx2.fillText("海洋 (溫暖)", cx, simCvs2.height - 60);
+
 
         simCtx2.fillStyle = "#f1c40f"; simCtx2.beginPath(); simCtx2.arc(80, 80, 40, 0, Math.PI * 2); simCtx2.fill();
         simCtx2.textAlign = "left";
