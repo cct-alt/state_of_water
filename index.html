@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>水的物態與水循環</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- 橫向警告遮罩 -->
+    <div id="orientation-warning">
+        <div class="icon">🔄📱</div>
+        <h1>請將 iPad 橫放</h1>
+        <p>此教學程式專為橫向螢幕設計，以獲得最佳觀看體驗。</p>
+    </div>
+
+    <!-- ================= 主頁面 ================= -->
+    <div id="home-page" class="page active">
+        <div class="home-container">
+            <h1>中一科學：水的物態與水循環</h1>
+            <p class="subtitle">請選擇教學模組</p>
+            <div class="menu-buttons">
+                <button class="menu-btn" onclick="switchPage('part1-page')">
+                    <span class="emoji">🌡️</span>
+                    <h3>第一部分</h3>
+                    <p>水的物態改變 (加熱與冷卻)</p>
+                </button>
+                <button class="menu-btn" onclick="switchPage('part2-page')">
+                    <span class="emoji">💧</span>
+                    <h3>第二部分</h3>
+                    <p>凝結現象探究 (三大情境)</p>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= 第一部分：水的物態改變 ================= -->
+    <div id="part1-page" class="page">
+        <div id="left-panel" class="panel-left">
+            <canvas id="simCanvas"></canvas>
+        </div>
+
+        <div id="right-panel" class="panel-right">
+            <div class="controls">
+                <button class="btn btn-home" onclick="switchPage('home-page')">🏠 返回主頁</button>
+                <div style="display: flex; justify-content: space-between; margin-top: 10px;">
+                    <button class="btn btn-heat" onclick="startSim('heating')" style="flex:1;">🔥 從 -50°C 開始加熱</button>
+                    <button class="btn btn-cool" onclick="startSim('cooling')" style="flex:1;">❄️ 從 150°C 開始冷卻</button>
+                </div>
+                <button class="btn btn-play" id="playPauseBtn" onclick="togglePlay()">暫停 ⏸️</button>
+            </div>
+
+            <div class="chart-container">
+                <h3 style="margin-top: 0; text-align: center; color: #333;">溫度 - 時間圖</h3>
+                <canvas id="chartCanvas"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= 第二部分：凝結專區 ================= -->
+    <div id="part2-page" class="page">
+        <div id="left-panel-2" class="panel-left">
+            <canvas id="simCanvas2"></canvas>
+        </div>
+
+        <div id="right-panel-2" class="panel-right">
+            <div class="controls">
+                <button class="btn btn-home" onclick="switchPage('home-page')">🏠 返回主頁</button>
+                <h3 style="text-align: center; color: #333; margin-top: 15px; margin-bottom: 10px;">請選擇凝結情境</h3>
+                <button class="btn btn-scenario" onclick="setScenario(1)">🧊 情境一：凍飲罐</button>
+                <button class="btn btn-scenario" onclick="setScenario(2)">🪞 情境二：浴室冷鏡子</button>
+                <button class="btn btn-scenario" onclick="setScenario(3)">☁️ 情境三：水循環 (高空成雲)</button>
+            </div>
+
+            <div class="chart-container desc-box">
+                <h3 id="scen-title" style="color: #3498db; font-size: 22px; margin-top: 0;">🧊 情境一：凍飲罐</h3>
+                <p id="scen-desc" style="font-size: 18px; color: #2c3e50; line-height: 1.6;">
+                    空氣中充滿了<span style="color:#e74c3c; font-weight:bold;">看不見的水汽</span>。當它們接觸到從雪櫃拿出的凍飲罐表面時，會失去能量並<span
+                        style="color:#3498db; font-weight:bold;">凝結成液態水滴</span>，沿著罐壁流下。
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
